@@ -1,0 +1,34 @@
+#################################
+## Stream wrapper controllers.
+#
+# Since we also want our URLs to be served similar to how private: and
+# temporary: URI are served by core, we also need to modify how the routing
+# system handles the tail portion of the URL.
+#
+# @see protected_download.services.yml
+#
+protected_download.protected_files:
+  path: '/system/protected-files/{scheme}'
+  defaults:
+    _controller: 'Drupal\protected_download\Controller\ProtectedDownloadController::download'
+    scheme: protected
+  requirements:
+    _access: 'TRUE'
+
+# In addition to the protected_download.protected_files route, which is actually
+# matched by the router, we also need a route definition to make our URLs.
+# This is never referenced by the routing system, but is used by our
+# stream wrapper class to create external URLs.
+#
+# @see ProtectedStream::getExternalUrl()
+#
+protected_download.protected_files_download:
+  path: '/protected/files/{filepath}'
+  defaults:
+    _controller: 'Drupal\protected_download\Controller\ProtectedDownloadController::download'
+    scheme: protected
+  requirements:
+    # Permissive regex to allow slashes in filepath see
+    # http://symfony.com/doc/current/cookbook/routing/slash_in_parameter.html
+    filepath: .+
+    _access: 'TRUE'

@@ -1,0 +1,17 @@
+services:
+  # Services.
+  protected_download.token_generator:
+    class: Drupal\protected_download\Service\TokenGenerator
+    arguments: [ '@private_key' ]
+
+  # Route subscriber.
+  protected_download.route_subscriber:
+    class: Drupal\protected_download\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  # PathProcessor definitions.
+  protected_download.path_processor.protected_files:
+    class: Drupal\protected_download\PathProcessor\PathProcessorProtectedFiles
+    tags:
+      - { name: path_processor_inbound, priority: 200 }

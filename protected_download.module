@@ -1,0 +1,68 @@
+<?php
+
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ */
+function protected_download_file_access(EntityInterface $entity, string $operation, AccountInterface $account) {
+  // Handles only download operation of private file or image.
+  if ($operation != 'download') {
+    return AccessResult::neutral();
+  }
+
+  // Handles only routes for private files or images.
+  $request = \Drupal::request();
+  $route_name = $request->get('_route');
+  if (!in_array($route_name, [
+    'system.private_file_download',
+    'system.files',
+    'image.style_private',
+  ])) {
+    return AccessResult::neutral();
+  }
+
+  // Token and timestamp must be available.
+  $token = $request->query->get('token');
+  if (!$token) {
+    return AccessResult::neutral();
+  }
+
+  /** @var \Drupal\protected_download\Service\TokenGenerator $token_generator */
+  $token_generator = \Drupal::service('protected_download.token_generator');
+
+  // Grant access if token is valid.
+  return AccessResult::allowedIf($token_generator->validate($token, $request->getPathInfo()));
+}
+
+/**
+ * Implements hook_file_url_alter().
+ */
+function protected_download_file_url_alter(string &$uri) {
+  /** @var \Drupal\Core\StreamWrapper\StreamWrapperManager $stream_wrapper_manager */
+  $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
+  if ($stream_wrapper_manager::getScheme($uri) == 'private'
+    && strpos($uri, 'private://protected/') === 0) {
+
+    // Alter happens in "file_create_url". If returned uri with query strings
+    // would contain the private wrapper, then injected query string arguments
+    // would get url encoded at the end of that function within
+    // Drupal\Core\StreamWrapper\PrivateStream::getExternalUrl(). Thus let's do
+    // that instead already here and attach query string arguments to full uri.
+    $private_wrapper = $stream_wrapper_manager->getViaUri($uri);
+    $uri = $private_wrapper->getExternalUrl();
+
+    $uri_without_scheme = file_url_transform_relative($uri);
+
+    /** @var \Drupal\protected_download\Service\TokenGenerator $token_generator */
+    $token_generator = \Drupal::service('protected_download.token_generator');
+    $token_query = [
+      'token' => $token_generator->get($uri_without_scheme),
+    ];
+
+    $uri .= (strpos($uri, '?') !== FALSE ? '&' : '?') . UrlHelper::buildQuery($token_query);
+  }
+}

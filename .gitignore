@@ -1,0 +1,13 @@
+/composer.spoons.json
+/composer.spoons.lock
+/vendor/
+/web/
+/.env
+.envrc
+/.editorconfig
+/.gitattributes
+/.docker
+/config-site
+/private
+/.idea
+/.gitlab-ci.yml

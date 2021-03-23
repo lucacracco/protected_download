@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the module.
+ */
+
+use Drupal\protected_download\StreamWrapper\ProtectedStream;
+
+/**
+ * Implements hook_requirements().
+ */
+function protected_download_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'install') {
+    return $requirements;
+  }
+  $directory = ProtectedStream::basePath();
+  $requirements['protected folder'] = [
+    'title' => t('Protected Folder'),
+  ];
+
+  $is_writable = is_writable($directory);
+  $is_directory = is_dir($directory);
+  if (!$is_writable || !$is_directory) {
+    $requirements['protected folder']['value'] = t('Not writable');
+    if (!$is_directory) {
+      $error = t('The directory %directory does not exist.', ['%directory' => $directory]);
+    }
+    else {
+      $error = t('The directory %directory is not writable.', ['%directory' => $directory]);
+    }
+    $description = [
+      '#type' => 'inline_template',
+      '#template' => '{{ error }} {{ description }}',
+      '#context' => [
+        'error' => $error,
+        'description' => t('You may need to set the correct directory for <em>Protected directory</em> or change the current directory\'s permissions so that it is writable.'),
+      ],
+    ];
+    $requirements['protected folder']['description'] = $description;
+    $requirements['protected folder']['severity'] = REQUIREMENT_ERROR;
+  }
+  else {
+    $requirements['protected folder']['value'] = t('<em>Protected</em> folder is writable');
+  }
+  return $requirements;
+}

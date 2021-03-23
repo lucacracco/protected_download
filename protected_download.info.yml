@@ -1,0 +1,5 @@
+name: Protected Download
+type: module
+description: This module provides a way to grant access to specific files for anonymous users.
+package: Media
+core_version_requirement: ^8.8 || ^9
