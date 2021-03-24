@@ -34,7 +34,7 @@ class StreamWrapperTest extends FileTestBase {
    *
    * @var string
    */
-  protected $classname = 'Drupal\protected_download\StreamWrapper\ProtectedWrapper';
+  protected $classname = 'Drupal\protected_download\StreamWrapper\ProtectedStream';
 
   /**
    * {@inheritdoc}
@@ -45,6 +45,7 @@ class StreamWrapperTest extends FileTestBase {
     // Add file_private_path setting.
     $request = Request::create('/');
     $site_path = DrupalKernel::findSitePath($request);
+    mkdir($site_path . '/protected');
     $this->setSetting('file_protected_path', $site_path . '/protected');
   }
 
@@ -70,8 +71,6 @@ class StreamWrapperTest extends FileTestBase {
    * Test the getViaUri() and getViaScheme() methods and target functions.
    */
   public function testUriFunctions() {
-    $config = $this->config('system.file');
-
     /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
     $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
 
@@ -83,17 +82,15 @@ class StreamWrapperTest extends FileTestBase {
     $this->assertFalse($stream_wrapper_manager::getTarget('foo/bar.txt'), 'foo/bar.txt is not a valid stream.');
     $this->assertSame($stream_wrapper_manager::getTarget('protected://'), '');
 
-    // Test file_build_uri() and
-    // Drupal\Core\StreamWrapper\LocalStream::getDirectoryPath().
-    $this->assertEqual(file_build_uri('foo/bar.txt'), 'protected://foo/bar.txt', 'Expected scheme was added.');
-    $this->assertEqual($stream_wrapper_manager->getViaScheme('protected')
-      ->getDirectoryPath(), ProtectedStream::basePath(), 'Expected default directory path was returned.');
+    // Test file_build_uri().
+    $this->assertNotEqual(file_build_uri('foo/bar.txt'), 'protected://foo/bar.txt', 'Expected scheme was added.');
+    $this->assertEqual($stream_wrapper_manager->getViaScheme('protected')->getDirectoryPath(), ProtectedStream::basePath(), 'Expected directory path was returned.');
 
     // Test file_create_url()
     // TemporaryStream::getExternalUrl() uses Url::fromRoute(), which needs
     // route information to work.
     $this->container->get('router.builder')->rebuild();
-    $this->assertStringContainsString(Settings::get('file_protected_path') . '/test.txt', file_create_url('protected://test.txt'), 'Protected external URL correctly built.');
+    $this->assertStringContainsString('protected/files/test.txt', file_create_url('protected://test.txt'), 'Protected external URL correctly built.');
   }
 
   /**

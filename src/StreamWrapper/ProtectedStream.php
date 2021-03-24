@@ -41,7 +41,7 @@ class ProtectedStream extends PrivateStream {
    */
   public function getExternalUrl() {
     $path = str_replace('\\', '/', $this->getTarget());
-    $token = \Drupal::service('protected_download.token_generator_for_protected_files')
+    $token = \Drupal::service('protected_download.token_generator')
       ->get($path);
     return Url::fromRoute('protected_download.protected_files_download', [
       'filepath' => $path,

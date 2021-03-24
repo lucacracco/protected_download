@@ -43,7 +43,7 @@ class ProtectedDownloadController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
     $instance->streamWrapperManager = $container->get('stream_wrapper_manager');
-    $instance->tokenGenerator = $container->get('protected_download.token_generator_for_protected_files');
+    $instance->tokenGenerator = $container->get('protected_download.token_generator');
     $instance->fileStorage = $container->get('entity_type.manager')
       ->getStorage('file');
     return $instance;
