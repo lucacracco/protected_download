@@ -34,6 +34,22 @@ When enabled, the module will provide a new StreamWrapper that you can use. Set
 the `file_protected_path` configuration in `settings.php` with the directory
 path to use.
 
+```
+/**
+ * Protected file path:
+ *
+ * A local file system path where protected files will be stored. This directory
+ * must be absolute, outside of the Drupal installation directory and not
+ * accessible over the web.
+ */
+$settings['file_protected_path'] = '../protected';
+```
+
+**Integration with Private Stream**
+
+If you use Private Stream and folder named "protected", the module protect your
+files with token how in protected stream wrapper, but with the private folder.
+
 LOCAL DEVELOPMENT
 -----------------
 

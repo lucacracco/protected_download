@@ -25,10 +25,18 @@ function protected_download_file_access(EntityInterface $entity, string $operati
     return AccessResult::neutral();
   }
 
+  /** @var \Drupal\Core\StreamWrapper\StreamWrapperManager $stream_wrapper_manager */
+  $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
+  $uri = $entity->getFileUri();
+  if (!($stream_wrapper_manager::getScheme($uri) == 'private'
+    && strpos($uri, 'private://protected/') === 0)) {
+    return AccessResult::neutral();
+  }
+
   // Token and timestamp must be available.
   $token = $request->query->get('token');
   if (!$token) {
-    return AccessResult::neutral();
+    return AccessResult::forbidden();
   }
 
   /** @var \Drupal\protected_download\Service\TokenGenerator $token_generator */
